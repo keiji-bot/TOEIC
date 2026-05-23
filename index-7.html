@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOEIC 満点への道 | 10分学習アプリ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1e;
+    --bg-card: #111827;
+    --bg-card2: #1a2235;
+    --accent: #e8c86a;
+    --accent2: #5b9cf6;
+    --accent3: #6ee7b7;
+    --text: #f0f4ff;
+    --text-muted: #8899bb;
+    --text-dim: #4a5a7a;
+    --border: rgba(255,255,255,0.07);
+    --border-accent: rgba(232,200,106,0.3);
+    --correct: #6ee7b7;
+    --wrong: #f87171;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Starfield background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(91,156,246,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(110,231,183,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(232,200,106,0.05) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .logo-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: -0.3px;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .score-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-card2);
+    border: 1px solid var(--border-accent);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  /* Progress bar */
+  .progress-section {
+    margin-bottom: 28px;
+  }
+
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .progress-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  .progress-count {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .progress-bar-bg {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  /* Question type indicator */
+  .type-indicator {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .type-chip {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    background: transparent;
+  }
+
+  .type-chip.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(232,200,106,0.08);
+  }
+
+  .type-chip.done {
+    border-color: var(--accent3);
+    color: var(--accent3);
+    background: rgba(110,231,183,0.08);
+  }
+
+  /* Question card */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent2), transparent);
+    opacity: 0.4;
+  }
+
+  .card-type-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 16px;
+  }
+
+  .card-type-tag.vocab { color: var(--accent); }
+  .card-type-tag.grammar { color: var(--accent3); }
+  .card-type-tag.listening { color: #c084fc; }
+
+  .question-number {
+    position: absolute;
+    top: 28px;
+    right: 28px;
+    font-family: 'DM Serif Display', serif;
+    font-size: 40px;
+    color: var(--border);
+    line-height: 1;
+    user-select: none;
+  }
+
+  .question-text {
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--text);
+    margin-bottom: 24px;
+    padding-right: 40px;
+  }
+
+  .question-word {
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+    color: var(--accent);
+    font-size: 22px;
+  }
+
+  .sentence-blank {
+    display: inline-block;
+    min-width: 80px;
+    border-bottom: 2px solid var(--accent2);
+    color: var(--accent2);
+    font-weight: 500;
+  }
+
+  /* Audio button for listening */
+  .audio-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(192,132,252,0.1);
+    border: 1px solid rgba(192,132,252,0.3);
+    border-radius: var(--radius-sm);
+    padding: 14px 20px;
+    color: #c084fc;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 24px;
+    width: 100%;
+    text-align: left;
+    transition: background 0.2s;
+  }
+
+  .audio-btn:hover { background: rgba(192,132,252,0.18); }
+
+  .audio-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(192,132,252,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .audio-wave {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+
+  .wave-bar {
+    width: 3px;
+    background: #c084fc;
+    border-radius: 2px;
+    animation: wave 1.2s ease-in-out infinite;
+  }
+
+  @keyframes wave {
+    0%, 100% { height: 6px; }
+    50% { height: 18px; }
+  }
+
+  .wave-bar:nth-child(2) { animation-delay: 0.15s; }
+  .wave-bar:nth-child(3) { animation-delay: 0.3s; }
+  .wave-bar:nth-child(4) { animation-delay: 0.15s; }
+
+  .listening-script {
+    background: rgba(192,132,252,0.05);
+    border: 1px solid rgba(192,132,252,0.15);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+
+  /* Answer options */
+  .options {
+    display: grid;
+    gap: 10px;
+  }
+
+  .option-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    width: 100%;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.04);
+  }
+
+  .option-btn:disabled { cursor: default; }
+
+  .option-letter {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .option-text {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .option-btn.correct {
+    border-color: var(--correct);
+    background: rgba(110,231,183,0.08);
+  }
+
+  .option-btn.correct .option-letter {
+    background: var(--correct);
+    color: #0a2a1e;
+  }
+
+  .option-btn.wrong {
+    border-color: var(--wrong);
+    background: rgba(248,113,113,0.08);
+  }
+
+  .option-btn.wrong .option-letter {
+    background: var(--wrong);
+    color: #2a0a0a;
+  }
+
+  /* Explanation */
+  .explanation {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: var(--radius-sm);
+    padding: 20px;
+    margin-top: 16px;
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .explanation.show { display: block; }
+
+  .exp-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 10px;
+  }
+
+  .exp-text {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text-muted);
+  }
+
+  .exp-text strong {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* Navigation */
+  .nav-btns {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #1a1200;
+  }
+
+  .btn-primary:hover { background: #f0d47a; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover {
+    background: var(--bg-card2);
+    color: var(--text);
+  }
+
+  /* Loading state */
+  .loading {
+    text-align: center;
+    padding: 48px 0;
+  }
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  /* Results screen */
+  .results-card {
+    text-align: center;
+    padding: 48px 32px;
+  }
+
+  .results-score-ring {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 24px;
+    position: relative;
+  }
+
+  .results-score-ring svg {
+    transform: rotate(-90deg);
+  }
+
+  .score-number {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .score-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .score-denom {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .results-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    margin-bottom: 8px;
+  }
+
+  .results-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .results-breakdown {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  .breakdown-item {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 10px;
+  }
+
+  .breakdown-num {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .breakdown-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  .streak-banner {
+    background: rgba(232,200,106,0.08);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-sm);
+    padding: 14px 20px;
+    font-size: 14px;
+    color: var(--accent);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  /* Start screen */
+  .start-card {
+    padding: 48px 32px;
+    text-align: center;
+  }
+
+  .start-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .start-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 30px;
+    margin-bottom: 12px;
+    line-height: 1.2;
+  }
+
+  .start-desc {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 32px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .session-info {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 36px;
+  }
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .info-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: var(--accent);
+  }
+
+  .info-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  .separator {
+    width: 1px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+
+  .api-error {
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.3);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    font-size: 13px;
+    color: var(--wrong);
+    margin-top: 16px;
+    display: none;
+  }
+
+  .api-error.show { display: block; }
+
+  /* Streak dots */
+  .streak-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+
+  .streak-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .streak-dot.lit {
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(232,200,106,0.5);
+  }
+
+  @media (max-width: 480px) {
+    .app { padding: 16px 14px 40px; }
+    .card { padding: 20px 18px; }
+    .start-card, .results-card { padding: 36px 20px; }
+    .start-title { font-size: 24px; }
+    .results-breakdown { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="logo">
+      <span class="logo-title">TOEIC Perfect</span>
+      <span class="logo-sub">Score Trainer</span>
+    </div>
+    <div class="score-badge" id="streakBadge">
+      🔥 <span id="streakCount">0</span>日連続
+    </div>
+  </header>
+
+  <div id="mainContent"></div>
+</div>
+
+<script>
+const QUESTIONS_PER_SESSION = 7; // 5 vocab + 1 grammar + 1 listening
+
+const QUESTION_PLAN = [
+  { type: 'vocabulary', label: '語彙' },
+  { type: 'vocabulary', label: '語彙' },
+  { type: 'vocabulary', label: '語彙' },
+  { type: 'vocabulary', label: '語彙' },
+  { type: 'vocabulary', label: '語彙' },
+  { type: 'grammar',    label: '文法' },
+  { type: 'listening',  label: 'リスニング' },
+];
+
+let state = {
+  screen: 'start', // start | loading | question | results
+  questions: [],
+  currentIndex: 0,
+  answers: [],
+  selectedOption: null,
+  showExplanation: false,
+  streak: parseInt(localStorage.getItem('toeic_streak') || '0'),
+  lastDate: localStorage.getItem('toeic_last_date') || '',
+  totalCorrect: 0,
+};
+
+function getToday() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function updateStreak() {
+  const today = getToday();
+  if (state.lastDate === today) return; // already done today
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  if (state.lastDate === yesterday) {
+    state.streak++;
+  } else if (state.lastDate !== today) {
+    state.streak = 1;
+  }
+  state.lastDate = today;
+  localStorage.setItem('toeic_streak', state.streak);
+  localStorage.setItem('toeic_last_date', today);
+  document.getElementById('streakCount').textContent = state.streak;
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────
+function render() {
+  document.getElementById('streakCount').textContent = state.streak;
+  const el = document.getElementById('mainContent');
+  if (state.screen === 'start') el.innerHTML = renderStart();
+  else if (state.screen === 'loading') el.innerHTML = renderLoading();
+  else if (state.screen === 'question') el.innerHTML = renderQuestion();
+  else if (state.screen === 'results') el.innerHTML = renderResults();
+  attachHandlers();
+}
+
+function renderStart() {
+  const dots = Array.from({ length: 7 }, (_, i) =>
+    `<div class="streak-dot${i < state.streak % 8 ? ' lit' : ''}"></div>`
+  ).join('');
+
+  return `
+  <div class="card start-card">
+    <span class="start-icon">🎯</span>
+    <h1 class="start-title">今日の10分<br>トレーニング</h1>
+    <p class="start-desc">TOEIC 800点〜満点を目指す短期集中セッション。<br>毎日続けることが最高のスコアへの近道です。</p>
+    <div class="session-info">
+      <div class="info-item">
+        <span class="info-num">5</span>
+        <span class="info-label">語彙問題</span>
+      </div>
+      <div class="separator"></div>
+      <div class="info-item">
+        <span class="info-num">1</span>
+        <span class="info-label">文法問題</span>
+      </div>
+      <div class="separator"></div>
+      <div class="info-item">
+        <span class="info-num">1</span>
+        <span class="info-label">リスニング</span>
+      </div>
+    </div>
+    <div class="streak-dots">${dots}</div>
+    <button class="btn btn-primary" id="startBtn" style="width:100%; padding:16px; font-size:16px;">
+      セッション開始 →
+    </button>
+    <div class="api-error" id="apiError"></div>
+  </div>`;
+}
+
+function renderLoading() {
+  return `
+  <div class="card">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">AI が問題を生成中です…</p>
+    </div>
+  </div>`;
+}
+
+function renderQuestion() {
+  const q = state.questions[state.currentIndex];
+  const plan = QUESTION_PLAN[state.currentIndex];
+  const answered = state.selectedOption !== null;
+
+  // Type chips
+  const chips = QUESTION_PLAN.map((p, i) => {
+    let cls = '';
+    if (i < state.currentIndex) cls = 'done';
+    else if (i === state.currentIndex) cls = 'active';
+    return `<span class="type-chip ${cls}">${p.label}</span>`;
+  }).join('');
+
+  // Type tag color
+  const typeClass = q.type === 'vocabulary' ? 'vocab' : q.type === 'grammar' ? 'grammar' : 'listening';
+  const typeLabel = q.type === 'vocabulary' ? '語彙' : q.type === 'grammar' ? '文法' : 'リスニング';
+
+  // Options
+  const letters = ['A', 'B', 'C', 'D'];
+  const opts = q.options.map((opt, i) => {
+    let cls = '';
+    if (answered) {
+      if (i === q.correctIndex) cls = 'correct';
+      else if (i === state.selectedOption) cls = 'wrong';
+    }
+    return `
+    <button class="option-btn ${cls}" ${answered ? 'disabled' : ''} data-idx="${i}">
+      <span class="option-letter">${letters[i]}</span>
+      <span class="option-text">${opt}</span>
+    </button>`;
+  }).join('');
+
+  // Listening extra
+  const listeningExtra = q.type === 'listening' ? `
+    <div class="audio-btn" id="toggleScript">
+      <div class="audio-icon">
+        <div class="audio-wave">
+          <div class="wave-bar" style="height:8px"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar" style="height:14px"></div>
+          <div class="wave-bar"></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:2px">スクリプトを表示</div>
+        <div style="font-size:12px;opacity:0.7">クリックで音声スクリプトを確認</div>
+      </div>
+    </div>
+    <div class="listening-script" id="scriptBox" style="display:none">${q.script || ''}</div>
+  ` : '';
+
+  // Explanation
+  const expHtml = answered ? `
+  <div class="explanation show">
+    <div class="exp-label">解説</div>
+    <div class="exp-text">${q.explanation}</div>
+  </div>` : '';
+
+  // Progress
+  const progress = ((state.currentIndex) / QUESTIONS_PER_SESSION) * 100;
+
+  const isLast = state.currentIndex === QUESTIONS_PER_SESSION - 1;
+
+  return `
+  <div class="progress-section">
+    <div class="progress-meta">
+      <span class="progress-label">TODAY'S SESSION</span>
+      <span class="progress-count">${state.currentIndex + 1} / ${QUESTIONS_PER_SESSION}</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" style="width:${progress}%"></div>
+    </div>
+  </div>
+
+  <div class="type-indicator">${chips}</div>
+
+  <div class="card">
+    <div class="card-type-tag ${typeClass}">● ${typeLabel}</div>
+    <div class="question-number">${String(state.currentIndex + 1).padStart(2,'0')}</div>
+    <p class="question-text">${q.question}</p>
+    ${listeningExtra}
+    <div class="options">${opts}</div>
+    ${expHtml}
+  </div>
+
+  <div class="nav-btns">
+    ${answered ? `
+      <button class="btn btn-primary" id="nextBtn">
+        ${isLast ? '結果を見る →' : '次の問題 →'}
+      </button>
+    ` : ''}
+  </div>`;
+}
+
+function renderResults() {
+  const total = state.answers.length;
+  const correct = state.answers.filter(a => a.correct).length;
+  const pct = Math.round((correct / total) * 100);
+
+  // Breakdown by type
+  const vocab = state.answers.filter(a => a.type === 'vocabulary');
+  const grammar = state.answers.filter(a => a.type === 'grammar');
+  const listening = state.answers.filter(a => a.type === 'listening');
+  const vocabC = vocab.filter(a => a.correct).length;
+  const gramC = grammar.filter(a => a.correct).length;
+  const lisC = listening.filter(a => a.correct).length;
+
+  let message = '';
+  if (pct === 100) message = '完璧！この調子で満点を目指しましょう！';
+  else if (pct >= 70) message = '素晴らしい！着実にスコアアップしています。';
+  else message = '継続が大切です。間違えた問題を復習しましょう。';
+
+  // SVG ring
+  const r = 48, cx = 60, cy = 60;
+  const circ = 2 * Math.PI * r;
+  const fill = circ * (pct / 100);
+
+  return `
+  <div class="card results-card">
+    <div class="results-score-ring">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+          stroke="url(#rg)" stroke-width="8"
+          stroke-dasharray="${fill} ${circ}"
+          stroke-linecap="round"/>
+        <defs>
+          <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#5b9cf6"/>
+            <stop offset="100%" stop-color="#e8c86a"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="score-number">
+        <span class="score-num">${correct}</span>
+        <span class="score-denom">/ ${total}</span>
+      </div>
+    </div>
+
+    <h2 class="results-title">セッション完了！</h2>
+    <p class="results-sub">${message}</p>
+
+    <div class="results-breakdown">
+      <div class="breakdown-item">
+        <div class="breakdown-num" style="color:var(--accent)">${vocabC}<span style="font-size:14px;color:var(--text-muted)">/${vocab.length}</span></div>
+        <div class="breakdown-label">語彙</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="breakdown-num" style="color:var(--accent3)">${gramC}<span style="font-size:14px;color:var(--text-muted)">/${grammar.length}</span></div>
+        <div class="breakdown-label">文法</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="breakdown-num" style="color:#c084fc">${lisC}<span style="font-size:14px;color:var(--text-muted)">/${listening.length}</span></div>
+        <div class="breakdown-label">リスニング</div>
+      </div>
+    </div>
+
+    <div class="streak-banner">
+      🔥 ${state.streak}日連続トレーニング達成！
+    </div>
+
+    <button class="btn btn-primary" id="restartBtn" style="width:100%; padding:14px; font-size:15px;">
+      明日もトレーニング開始 →
+    </button>
+  </div>`;
+}
+
+// ─── Handlers ────────────────────────────────────────────────────────────
+function attachHandlers() {
+  document.getElementById('startBtn')?.addEventListener('click', startSession);
+  document.getElementById('nextBtn')?.addEventListener('click', nextQuestion);
+  document.getElementById('restartBtn')?.addEventListener('click', () => {
+    state = { ...state, screen: 'start', questions: [], currentIndex: 0, answers: [], selectedOption: null };
+    render();
+  });
+
+  document.getElementById('toggleScript')?.addEventListener('click', () => {
+    const box = document.getElementById('scriptBox');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  });
+
+  document.querySelectorAll('.option-btn:not([disabled])').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      selectAnswer(idx);
+    });
+  });
+}
+
+function nextQuestion() {
+  if (state.currentIndex < QUESTIONS_PER_SESSION - 1) {
+    state.currentIndex++;
+    state.selectedOption = null;
+    state.showExplanation = false;
+    render();
+  } else {
+    updateStreak();
+    state.screen = 'results';
+    render();
+  }
+}
+
+function selectAnswer(idx) {
+  const q = state.questions[state.currentIndex];
+  const correct = idx === q.correctIndex;
+  state.selectedOption = idx;
+  state.answers.push({ type: q.type, correct });
+  render();
+}
+
+// ─── AI Question Generation ───────────────────────────────────────────────
+async function startSession() {
+  state.screen = 'loading';
+  render();
+
+  try {
+    const questions = await generateAllQuestions();
+    state.questions = questions;
+    state.currentIndex = 0;
+    state.answers = [];
+    state.selectedOption = null;
+    state.screen = 'question';
+    render();
+  } catch (err) {
+    state.screen = 'start';
+    render();
+    const errEl = document.getElementById('apiError');
+    errEl.textContent = `エラー: ${err.message}。もう一度お試しください。`;
+    errEl.classList.add('show');
+  }
+}
+
+async function generateAllQuestions() {
+  const prompt = `You are a TOEIC expert. Generate exactly 7 TOEIC questions for advanced learners (targeting 800-990 score). 
+
+Create:
+- 5 vocabulary questions (type: "vocabulary") - focus on business/academic words that appear in TOEIC 800+ level
+- 1 grammar question (type: "grammar") - complex sentence structures, part of speech, conjunctions used in TOEIC
+- 1 listening comprehension question (type: "listening") - include a realistic business dialogue script
+
+For each question, return a JSON object. Return ONLY a valid JSON array, no markdown, no explanation.
+
+Format:
+[
+  {
+    "type": "vocabulary",
+    "question": "The company decided to _____ its operations to three new countries next year.",
+    "options": ["extend", "expatiate", "expropriate", "expunge"],
+    "correctIndex": 0,
+    "explanation": "「extend」は「拡大する・広げる」という意味で、ビジネスシーンで頻出。<strong>expand/extend operations</strong>（事業を拡大する）はTOEICの常套句。expatiate（詳述する）、expropriate（収用する）、expunge（抹消する）は文脈に合わない。"
+  },
+  ...
+  {
+    "type": "listening",
+    "question": "According to the conversation, why is the meeting being postponed?",
+    "script": "W: John, I just got a message from the client. They need to push back our Thursday meeting. Apparently their CFO has an unexpected board presentation that day.\\nM: Oh no, we've already booked the conference room. Should I reschedule it for next week?\\nW: Yes, please check if Friday the 15th works and send them a calendar invite.",
+    "options": [
+      "The conference room is unavailable",
+      "The client's CFO has a conflicting commitment",
+      "The woman is traveling that day",
+      "The meeting agenda is not ready"
+    ],
+    "correctIndex": 1,
+    "explanation": "スクリプトより、<strong>「their CFO has an unexpected board presentation」</strong>（CFOに突然の取締役会プレゼンが入った）と述べており、これが延期の理由。「push back」＝「延期する」はリスニングで頻出表現。"
+  }
+]
+
+Make questions authentic to TOEIC Part 5/6/4 style. All explanations MUST be in Japanese. Use <strong> tags to highlight key words. Vary the vocabulary topics (finance, HR, logistics, marketing, etc).`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 3000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error?.message || `API error ${response.status}`);
+  }
+
+  const data = await response.json();
+  const raw = data.content.map(c => c.text || '').join('');
+  const clean = raw.replace(/```json|```/g, '').trim();
+  const questions = JSON.parse(clean);
+
+  if (!Array.isArray(questions) || questions.length < 7) {
+    throw new Error('問題の生成に失敗しました。再試行してください。');
+  }
+
+  return questions;
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
+`;
